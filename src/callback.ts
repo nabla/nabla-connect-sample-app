@@ -48,9 +48,7 @@ const formatPatientInstructionsLog = (body: NablaPatientInstructionsExportCallba
     },
   } = body;
 
-  const instructions = patient_instructions.instructions
-    .map((instruction, idx) => `  ${idx + 1}. ${instruction}`)
-    .join('\n');
+  const instructions = patient_instructions.instructions;
 
   return [
     `[PATIENT_INSTRUCTIONS_EXPORT] request=${request_uuid}`,
