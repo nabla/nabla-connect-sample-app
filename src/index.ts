@@ -2,9 +2,15 @@ import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { launchNabla, LaunchNablaQuery } from './launchNabla';
-import { HttpError, NablaCallbackBody, NablaCallbackResponse } from './types';
+import {
+  HttpError,
+  LaunchEncounterPayload,
+  NablaCallbackBody,
+  NablaCallbackResponse,
+} from './types';
 import { handleCallback } from './callback';
 import { verifyHmacSignature } from './signatureVerification';
+import { renderEncounterPage } from './renderEncounterPage';
 
 dotenv.config();
 
@@ -32,7 +38,10 @@ if (!signingSecret) {
 
 app.get(
   '/nabla/open/:encounterId',
-  async (request: express.Request<{ encounterId: string }, {}, {}, LaunchNablaQuery>, response) => {
+  async (
+    request: express.Request<{ encounterId: string }, unknown, unknown, LaunchNablaQuery>,
+    response,
+  ) => {
     const { encounterId } = request.params;
     const {
       patientId,
@@ -42,22 +51,41 @@ app.get(
       patientDob,
       patientGender,
       patientPronouns,
+      unstructuredContext,
     } = request.query;
 
     // Launch the Nabla encounter
     try {
+      const requestBody: LaunchEncounterPayload = {
+        external_patient_id: patientId || 'patient-123456',
+        external_encounter_id: encounterId,
+        external_provider_id: providerId || process.env.DEFAULT_PROVIDER_ID!,
+        provider_email: providerEmail || process.env.DEFAULT_PROVIDER_EMAIL!,
+        encounter_data: {
+          patient_name: patientName || 'John Doe',
+          patient_dob: patientDob || '1990-01-01',
+          patient_gender: patientGender || 'OTHER',
+          patient_pronouns: patientPronouns,
+        },
+        unstructured_context: unstructuredContext,
+      };
       const encounterUrl = await launchNabla({
         baseUrl: process.env.NABLA_URL!,
-        encounterId,
-        patientId,
-        providerEmail,
-        providerId,
-        patientName,
-        patientDob,
-        patientGender,
-        patientPronouns,
+        requestBody,
       });
-      response.redirect(encounterUrl);
+      response.send(
+        renderEncounterPage({
+          encounterUrl,
+          patientId: requestBody.external_patient_id,
+          providerEmail: requestBody.provider_email,
+          providerId: requestBody.external_provider_id,
+          patientName: requestBody.encounter_data.patient_name,
+          patientDob: requestBody.encounter_data.patient_dob,
+          patientGender: requestBody.encounter_data.patient_gender,
+          patientPronouns: requestBody.encounter_data.patient_pronouns,
+          unstructuredContext: requestBody.unstructured_context,
+        }),
+      );
     } catch (error) {
       console.error('Error launching Nabla encounter:', error);
       throw new HttpError(500, 'Error launching Nabla encounter');
@@ -79,7 +107,7 @@ app.post(
     },
   }),
   async (
-    request: express.Request<{}, {}, NablaCallbackBody, {}>,
+    request: express.Request<unknown, unknown, NablaCallbackBody, unknown>,
     response: express.Response<NablaCallbackResponse>,
   ) => {
     await handleCallback(request.body);

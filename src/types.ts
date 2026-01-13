@@ -1,4 +1,4 @@
-import z, { nullable } from 'zod';
+import z from 'zod';
 
 const PATIENT_GENDER_VALUES = ['FEMALE', 'MALE', 'OTHER', 'UNKNOWN'] as const;
 export type PatientGender = (typeof PATIENT_GENDER_VALUES)[number];
@@ -13,7 +13,7 @@ const EncounterDataSchema = z.object({
   patient_name: z.string(),
   patient_dob: z.iso.date(),
   patient_gender: genderEnum,
-  patient_pronouns: pronounEnum.nullable(),
+  patient_pronouns: pronounEnum.optional(),
 });
 
 export const LaunchEncounterPayloadSchema = z.object({
@@ -22,6 +22,7 @@ export const LaunchEncounterPayloadSchema = z.object({
   external_provider_id: z.string(),
   provider_email: z.email(),
   encounter_data: EncounterDataSchema,
+  unstructured_context: z.string().optional(),
 });
 
 export const LaunchEncounterResponseSchema = z.object({

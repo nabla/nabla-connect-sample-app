@@ -13,45 +13,18 @@ export interface LaunchNablaQuery {
   patientName?: string;
   patientDob?: string;
   patientGender?: PatientGender;
-  patientPronouns?: PatientPronouns;
+  patientPronouns?: PatientPronouns | undefined;
+  unstructuredContext?: string | undefined;
 }
 
 type LaunchNablaParams = {
   baseUrl: string;
-  encounterId: string;
-  patientId: string | undefined;
-  providerEmail: string | undefined;
-  providerId: string | undefined;
-  patientName: string | undefined;
-  patientDob: string | undefined;
-  patientGender: PatientGender | undefined;
-  patientPronouns: PatientPronouns | undefined;
+  requestBody: LaunchEncounterPayload;
 };
 
-export const launchNabla = async ({
-  baseUrl,
-  encounterId,
-  patientId,
-  providerEmail,
-  providerId,
-  patientName,
-  patientDob,
-  patientGender,
-  patientPronouns,
-}: LaunchNablaParams): Promise<string> => {
+export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): Promise<string> => {
   const url = new URL(`${baseUrl}/encounter`);
-  const requestBody: LaunchEncounterPayload = {
-    external_patient_id: patientId || 'patient-123456',
-    external_encounter_id: encounterId,
-    external_provider_id: providerId || process.env.DEFAULT_PROVIDER_ID!,
-    provider_email: providerEmail || process.env.DEFAULT_PROVIDER_EMAIL!,
-    encounter_data: {
-      patient_name: patientName || 'John Doe',
-      patient_dob: patientDob || '1990-01-01',
-      patient_gender: patientGender || 'OTHER',
-      patient_pronouns: patientPronouns || null,
-    },
-  };
+
   const accessToken = await requestAccessToken({
     baseUrl,
     oauthClientId: process.env.OAUTH_CLIENT_ID!,
