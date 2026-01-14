@@ -69,15 +69,16 @@ PORT=4000
 - `GET /nabla/open/:encounterId`  
   Launches a Nabla encounter using query parameters for patient/provider/whoever context, then redirects the browser to the Nabla-hosted UI.
 
-  | Query param       | Required | Description                                      |
-  | ----------------- | -------- | ------------------------------------------------ |
-  | `patientId`       | Yes      | External patient identifier used by your system. |
-  | `patientName`     | No       | Patient full name; fills encounter metadata.     |
-  | `patientDob`      | No       | Patient date of birth (ISO date string).         |
-  | `patientGender`   | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.     |
-  | `patientPronouns` | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.         |
-  | `providerEmail`   | No       | Email of the provider launching the encounter.   |
-  | `providerId`      | No       | External provider identifier; defaults apply.    |
+  | Query param           | Required | Description                                                             |
+  | --------------------- | -------- | ----------------------------------------------------------------------- |
+  | `patientId`           | Yes      | External patient identifier used by your system.                        |
+  | `patientName`         | No       | Patient full name; fills encounter metadata.                            |
+  | `patientDob`          | No       | Patient date of birth (ISO date string).                                |
+  | `patientGender`       | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.                            |
+  | `patientPronouns`     | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.                                |
+  | `providerEmail`       | No       | Email of the provider launching the encounter.                          |
+  | `providerId`          | No       | External provider identifier; defaults apply.                           |
+  | `unstructuredContext` | No       | The same unstructured patient context that served to generate the note. |
 
 - `POST /nabla/callback`
   Receives Nabla export callbacks, verifies their signature, and logs formatted notes or patient instructions so you can inspect the payloads during development.
