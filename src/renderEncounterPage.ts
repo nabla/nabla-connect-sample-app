@@ -75,7 +75,7 @@ const encounterTemplate = `<!DOCTYPE html>
       </div>
     </aside>
     <main class="main-frame">
-      <iframe src="<%= encounterUrl %>" allow="camera; microphone; fullscreen; autoplay" allowfullscreen></iframe>
+      <iframe src="<%= encounterUrl %>" allow="microphone;"></iframe>
     </main>
   </body>
 </html>`;
