@@ -9,11 +9,13 @@ export type PatientPronouns = (typeof PATIENT_PRONOUN_VALUES)[number];
 const genderEnum = z.enum(PATIENT_GENDER_VALUES);
 const pronounEnum = z.enum(PATIENT_PRONOUN_VALUES);
 
-const EncounterDataSchema = z.object({
-  patient_name: z.string(),
-  patient_dob: z.iso.date(),
-  patient_gender: genderEnum,
-  patient_pronouns: pronounEnum.optional(),
+const StructuredContextSchema = z.object({
+  patient_demographics: z.object({
+    name: z.string(),
+    birth_date: z.iso.date(),
+    gender: genderEnum,
+    pronouns: pronounEnum.optional(),
+  }),
 });
 
 export const LaunchEncounterPayloadSchema = z.object({
@@ -21,7 +23,7 @@ export const LaunchEncounterPayloadSchema = z.object({
   external_encounter_id: z.string(),
   external_provider_id: z.string(),
   provider_email: z.email(),
-  encounter_data: EncounterDataSchema,
+  structured_context: StructuredContextSchema,
   unstructured_context: z.string().optional(),
 });
 
