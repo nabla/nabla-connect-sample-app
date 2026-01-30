@@ -11,7 +11,7 @@ export interface LaunchNablaQuery {
   providerEmail?: string;
   providerId?: string;
   patientName?: string;
-  patientDob?: string;
+  patientBirthDate?: string;
   patientGender?: PatientGender;
   patientPronouns?: PatientPronouns | undefined;
   unstructuredContext?: string | undefined;
@@ -37,6 +37,7 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
+      'X-Nabla-Api-Version': 'x-nabla-next',
     },
     body: JSON.stringify(requestBody),
   });

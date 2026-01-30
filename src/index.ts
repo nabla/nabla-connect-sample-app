@@ -48,7 +48,7 @@ app.get(
       providerEmail,
       providerId,
       patientName,
-      patientDob,
+      patientBirthDate,
       patientGender,
       patientPronouns,
       unstructuredContext,
@@ -61,11 +61,13 @@ app.get(
         external_encounter_id: encounterId,
         external_provider_id: providerId || process.env.DEFAULT_PROVIDER_ID!,
         provider_email: providerEmail || process.env.DEFAULT_PROVIDER_EMAIL!,
-        encounter_data: {
-          patient_name: patientName || 'John Doe',
-          patient_dob: patientDob || '1990-01-01',
-          patient_gender: patientGender || 'OTHER',
-          patient_pronouns: patientPronouns,
+        structured_context: {
+          patient_demographics: {
+            name: patientName || 'John Doe',
+            birth_date: patientBirthDate || '1990-01-01',
+            gender: patientGender || 'OTHER',
+            pronouns: patientPronouns,
+          },
         },
         unstructured_context: unstructuredContext,
       };
@@ -79,10 +81,10 @@ app.get(
           patientId: requestBody.external_patient_id,
           providerEmail: requestBody.provider_email,
           providerId: requestBody.external_provider_id,
-          patientName: requestBody.encounter_data.patient_name,
-          patientDob: requestBody.encounter_data.patient_dob,
-          patientGender: requestBody.encounter_data.patient_gender,
-          patientPronouns: requestBody.encounter_data.patient_pronouns,
+          patientName: requestBody.structured_context.patient_demographics.name,
+          patientBirthDate: requestBody.structured_context.patient_demographics.birth_date,
+          patientGender: requestBody.structured_context.patient_demographics.gender,
+          patientPronouns: requestBody.structured_context.patient_demographics.pronouns,
           unstructuredContext: requestBody.unstructured_context,
         }),
       );
@@ -115,21 +117,14 @@ app.post(
   },
 );
 
-app.use(
-  (
-    error: Error,
-    _request: express.Request,
-    response: express.Response,
-    _next: express.NextFunction,
-  ) => {
-    if (error instanceof HttpError) {
-      response.status(error.status).send({ errorMessage: error.message });
-    } else {
-      console.error('Unexpected error:', error);
-      response.status(500).send({ errorMessage: 'Internal Server Error' });
-    }
-  },
-);
+app.use((error: Error, _request: express.Request, response: express.Response) => {
+  if (error instanceof HttpError) {
+    response.status(error.status).send({ errorMessage: error.message });
+  } else {
+    console.error('Unexpected error:', error);
+    response.status(500).send({ errorMessage: 'Internal Server Error' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
