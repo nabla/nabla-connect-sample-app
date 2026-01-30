@@ -73,7 +73,7 @@ PORT=4000
   | --------------------- | -------- | ----------------------------------------------------------------------- |
   | `patientId`           | Yes      | External patient identifier used by your system.                        |
   | `patientName`         | No       | Patient full name; fills encounter metadata.                            |
-  | `patientDob`          | No       | Patient date of birth (ISO date string).                                |
+  | `patientBirthDate`          | No       | Patient date of birth (ISO date string).                                |
   | `patientGender`       | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.                            |
   | `patientPronouns`     | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.                                |
   | `providerEmail`       | No       | Email of the provider launching the encounter.                          |

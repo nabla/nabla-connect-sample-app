@@ -11,7 +11,7 @@ export interface LaunchNablaQuery {
   providerEmail?: string;
   providerId?: string;
   patientName?: string;
-  patientDob?: string;
+  patientBirthDate?: string;
   patientGender?: PatientGender;
   patientPronouns?: PatientPronouns | undefined;
   unstructuredContext?: string | undefined;

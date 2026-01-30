@@ -48,7 +48,7 @@ app.get(
       providerEmail,
       providerId,
       patientName,
-      patientDob,
+      patientBirthDate,
       patientGender,
       patientPronouns,
       unstructuredContext,
@@ -64,7 +64,7 @@ app.get(
         structured_context: {
           patient_demographics: {
             name: patientName || 'John Doe',
-            birth_date: patientDob || '1990-01-01',
+            birth_date: patientBirthDate || '1990-01-01',
             gender: patientGender || 'OTHER',
             pronouns: patientPronouns,
           },
@@ -82,7 +82,7 @@ app.get(
           providerEmail: requestBody.provider_email,
           providerId: requestBody.external_provider_id,
           patientName: requestBody.structured_context.patient_demographics.name,
-          patientDob: requestBody.structured_context.patient_demographics.birth_date,
+          patientBirthDate: requestBody.structured_context.patient_demographics.birth_date,
           patientGender: requestBody.structured_context.patient_demographics.gender,
           patientPronouns: requestBody.structured_context.patient_demographics.pronouns,
           unstructuredContext: requestBody.unstructured_context,
