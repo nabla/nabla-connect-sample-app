@@ -37,6 +37,7 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
+      'X-Nabla-Api-Version': 'x-nabla-next',
     },
     body: JSON.stringify(requestBody),
   });
