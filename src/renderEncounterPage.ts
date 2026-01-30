@@ -88,14 +88,14 @@ export const renderEncounterPage = ({
   providerEmail,
   providerId,
   patientName,
-  patientDob,
+  patientBirthDate,
   patientGender,
   patientPronouns,
 }: RenderEncounterPageParams): string => {
   const patientContext = [
     { label: 'Patient ID', value: formatValue(patientId) },
     { label: 'Name', value: formatValue(patientName) },
-    { label: 'Date of Birth', value: formatValue(patientDob) },
+    { label: 'Date of Birth', value: formatValue(patientBirthDate) },
     { label: 'Gender', value: formatValue(patientGender) },
     { label: 'Pronouns', value: formatValue(patientPronouns) },
     { label: 'Provider Email', value: formatValue(providerEmail) },
