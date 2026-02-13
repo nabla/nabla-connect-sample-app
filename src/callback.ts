@@ -57,10 +57,28 @@ const formatPatientInstructionsLog = (body: NablaPatientInstructionsExportCallba
   ].join('\n');
 };
 
+const formatTranscriptLog = (body: NablaNoteExportBody) => {
+  const transcriptItems = body.data.transcript?.items;
+
+  if (!transcriptItems || transcriptItems.length === 0) {
+    return 'Transcript: (none)';
+  }
+
+  const items = transcriptItems
+    .map((item, idx) => {
+      const locale = item.locale ? ` [${item.locale}]` : '';
+      return `  ${idx + 1}. ${item.speaker_type}${locale} (${item.start_offset_ms}-${item.end_offset_ms}ms): ${item.text}`;
+    })
+    .join('\n');
+
+  return `Transcript:\n${items}`;
+};
+
 export const handleCallback = async (body: NablaCallbackBody) => {
   switch (body.type) {
     case 'NOTE_EXPORT':
       console.log(formatNoteExportLog(body));
+      console.log(formatTranscriptLog(body));
       break;
     case 'PATIENT_INSTRUCTIONS_EXPORT':
       console.log(formatPatientInstructionsLog(body));

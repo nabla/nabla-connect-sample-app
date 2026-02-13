@@ -40,7 +40,10 @@ export async function requestAccessToken({
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Nabla-Api-Version': process.env.NABLA_API_VERSION!,
+    },
     body: JSON.stringify({
       grant_type: 'client_credentials',
       client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
