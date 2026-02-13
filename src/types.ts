@@ -43,6 +43,7 @@ export const noteSectionSchema = z.object({
 
 export const encounterNoteSchema = z.object({
   sections: z.array(noteSectionSchema),
+  free_text: z.string().optional(),
 });
 
 export const patientInstructionsSchema = z.object({
@@ -57,6 +58,24 @@ const baseCallbackSchema = z.object({
   type: z.enum(['NOTE_EXPORT', 'PATIENT_INSTRUCTIONS_EXPORT']),
 });
 
+const transcriptItemSchema = z.object({
+  speaker_type: z.string(),
+  locale: z.string().optional(),
+  text: z.string(),
+  start_offset_ms: z.number(),
+  end_offset_ms: z.number(),
+});
+
+export const transcriptSchema = z.preprocess(
+  (value) => (Array.isArray(value) ? { items: value } : value),
+  z.object({
+    items: z.array(transcriptItemSchema),
+  }),
+);
+
+export type Transcript = z.infer<typeof transcriptSchema>;
+export type TranscriptItem = z.infer<typeof transcriptSchema>['items'][number];
+
 export const noteExportNablaCallbackBodySchema = baseCallbackSchema.extend({
   type: z.literal('NOTE_EXPORT'),
   data: z.object({
@@ -64,6 +83,7 @@ export const noteExportNablaCallbackBodySchema = baseCallbackSchema.extend({
     external_encounter_id: z.string(),
     external_provider_id: z.string(),
     note: encounterNoteSchema,
+    transcript: transcriptSchema.optional(),
   }),
 });
 

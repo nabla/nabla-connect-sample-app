@@ -7,6 +7,7 @@ import {
   LaunchEncounterPayload,
   NablaCallbackBody,
   NablaCallbackResponse,
+  nablaCallbackBodySchema,
 } from './types';
 import { handleCallback } from './callback';
 import { verifyHmacSignature } from './signatureVerification';
@@ -41,6 +42,7 @@ app.get(
   async (
     request: express.Request<{ encounterId: string }, unknown, unknown, LaunchNablaQuery>,
     response,
+    next: express.NextFunction,
   ) => {
     const { encounterId } = request.params;
     const {
@@ -90,7 +92,7 @@ app.get(
       );
     } catch (error) {
       console.error('Error launching Nabla encounter:', error);
-      throw new HttpError(500, 'Error launching Nabla encounter');
+      next(new HttpError(500, 'Error launching Nabla encounter'));
     }
   },
 );
@@ -112,19 +114,32 @@ app.post(
     request: express.Request<unknown, unknown, NablaCallbackBody, unknown>,
     response: express.Response<NablaCallbackResponse>,
   ) => {
-    await handleCallback(request.body);
-    response.status(200).json({ request_uuid: request.body.request_uuid });
+    const callbackBody = nablaCallbackBodySchema.parse(request.body);
+    await handleCallback(callbackBody);
+    response.status(200).json({ request_uuid: callbackBody.request_uuid });
   },
 );
 
-app.use((error: Error, _request: express.Request, response: express.Response) => {
-  if (error instanceof HttpError) {
-    response.status(error.status).send({ errorMessage: error.message });
-  } else {
-    console.error('Unexpected error:', error);
-    response.status(500).send({ errorMessage: 'Internal Server Error' });
-  }
-});
+app.use(
+  (
+    error: Error,
+    _request: express.Request,
+    response: express.Response,
+    next: express.NextFunction,
+  ) => {
+    if (response.headersSent) {
+      next(error);
+      return;
+    }
+
+    if (error instanceof HttpError) {
+      response.status(error.status).send({ errorMessage: error.message });
+    } else {
+      console.error('Unexpected error:', error);
+      response.status(500).send({ errorMessage: 'Internal Server Error' });
+    }
+  },
+);
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);

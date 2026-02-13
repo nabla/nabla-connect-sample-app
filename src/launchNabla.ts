@@ -37,7 +37,7 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
-      'X-Nabla-Api-Version': 'x-nabla-next',
+      'X-Nabla-Api-Version': process.env.NABLA_API_VERSION!,
     },
     body: JSON.stringify(requestBody),
   });
@@ -49,5 +49,6 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
   }
 
   const responseJson = LaunchEncounterResponseSchema.parse(await response.json());
+  console.log('Nabla encounter launched successfully, encounter URL:', responseJson.encounter_url);
   return responseJson.encounter_url;
 };
