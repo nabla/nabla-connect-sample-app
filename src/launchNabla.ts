@@ -39,8 +39,6 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
     externalProviderId: requestBody.external_provider_id,
   });
 
-  requestBody.external_provider_id = provisionedUser.external_provider_id;
-
   console.log('Launching Nabla encounter at', url.toString());
 
   const response = await fetch(url, {
@@ -50,7 +48,10 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
       Authorization: `Bearer ${accessToken}`,
       'X-Nabla-Api-Version': process.env.NABLA_API_VERSION!,
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      ...requestBody,
+      external_provider_id: provisionedUser.external_provider_id,
+    }),
   });
 
   if (!response.ok) {

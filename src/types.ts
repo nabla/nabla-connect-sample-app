@@ -44,12 +44,6 @@ const UserSettingsSchema = z.object({
   secondary_speech_locale: z.string().nullable(),
 });
 
-export const ProvisionUserPayloadSchema = z.object({
-  provider_email: z.email(),
-  external_provider_id: z.string(),
-  settings: UserSettingsSchema.optional(),
-});
-
 export const ProvisionUserResponseSchema = z.object({
   provider_email: z.string(),
   external_provider_id: z.string(),
@@ -57,7 +51,6 @@ export const ProvisionUserResponseSchema = z.object({
   created_at: z.string(),
 });
 
-export type ProvisionUserPayload = z.infer<typeof ProvisionUserPayloadSchema>;
 export type ProvisionUserResponse = z.infer<typeof ProvisionUserResponseSchema>;
 
 export type LaunchEncounterResponse = z.infer<typeof LaunchEncounterResponseSchema>;
