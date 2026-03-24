@@ -26,6 +26,11 @@ export async function provisionUser({
     body: JSON.stringify({
       provider_email: providerEmail,
       external_provider_id: externalProviderId,
+      settings: {
+        specialty: { kind: 'GENERAL_PRACTICE', other_specialty_name: null },
+        speech_locale: 'en-US',
+        secondary_speech_locale: null,
+      },
     }),
   });
 
