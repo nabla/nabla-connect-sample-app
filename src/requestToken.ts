@@ -40,7 +40,7 @@ export async function requestAccessToken({
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       'X-Nabla-Api-Version': process.env.NABLA_API_VERSION!,
     },
