@@ -1,4 +1,5 @@
 import { requestAccessToken } from './requestToken';
+import { provisionUser } from './provisionUser';
 import {
   LaunchEncounterPayload,
   LaunchEncounterResponseSchema,
@@ -30,6 +31,16 @@ export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): 
     oauthClientId: process.env.OAUTH_CLIENT_ID!,
     oauthPrivateKey: process.env.OAUTH_PRIVATE_KEY!,
   });
+
+  const provisionedUser = await provisionUser({
+    baseUrl,
+    accessToken,
+    providerEmail: requestBody.provider_email,
+    externalProviderId: requestBody.external_provider_id,
+  });
+
+  requestBody.external_provider_id = provisionedUser.external_provider_id;
+
   console.log('Launching Nabla encounter at', url.toString());
 
   const response = await fetch(url, {
