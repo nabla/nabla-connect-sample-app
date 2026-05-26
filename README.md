@@ -15,8 +15,8 @@ A minimal Express.js backend that demonstrates how to integrate with [Nabla Conn
 ### 1. Download and install
 
 ```bash
-git clone https://github.com/nabla/nabla-connect-demo-server.git
-cd nabla-connect-demo-server
+git clone https://github.com/nabla/nabla-connect-sample-app.git
+cd nabla-connect-sample-app
 yarn install
 ```
 
