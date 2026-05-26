@@ -67,18 +67,60 @@ PORT=4000
 ## Endpoints
 
 - `GET /nabla/open/:encounterId`  
-  Launches a Nabla encounter using query parameters for patient/provider/whoever context, then redirects the browser to the Nabla-hosted UI.
+  Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
 
   | Query param           | Required | Description                                                             |
   | --------------------- | -------- | ----------------------------------------------------------------------- |
   | `patientId`           | Yes      | External patient identifier used by your system.                        |
   | `patientName`         | No       | Patient full name; fills encounter metadata.                            |
-  | `patientBirthDate`          | No       | Patient date of birth (ISO date string).                                |
+  | `patientBirthDate`    | No       | Patient date of birth (ISO date string).                                |
   | `patientGender`       | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.                            |
-  | `patientPronouns`     | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.                                |
+  | `patientPronouns`     | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.                               |
   | `providerEmail`       | No       | Email of the provider launching the encounter.                          |
   | `providerId`          | No       | External provider identifier; defaults apply.                           |
-  | `unstructuredContext` | No       | The same unstructured patient context that served to generate the note. |
+  | `unstructuredContext` | No       | Free-text patient context used during note generation (max 700 chars).  |
+
+- `POST /nabla/encounters/url`  
+  Generates a URL for an **existing** Nabla encounter (`POST /encounters/url`). Useful when the encounter was already created and you only need a fresh login link.
+
+  Request body:
+  ```json
+  {
+    "external_encounter_id": "enc-123",
+    "external_provider_id": "prov-456"
+  }
+  ```
+
+  Response: `{ "encounter_url": "https://..." }`
+
+  ```bash
+  curl -X POST http://localhost:4000/nabla/encounters/url \
+    -H 'Content-Type: application/json' \
+    -d '{"external_encounter_id":"enc-123","external_provider_id":"prov-456"}'
+  ```
+
+- `POST /nabla/users`  
+  Upserts a provider user (`POST /users`). Matching is done on `external_provider_id`. Creates the user if new; updates settings if the user already exists. Returns `409` if `external_provider_id` and `provider_email` identify two different existing users.
+
+  Request body:
+  ```json
+  {
+    "provider_email": "provider@example.com",
+    "external_provider_id": "prov-456",
+    "settings": {
+      "specialty": { "kind": "GENERAL_MEDICINE" },
+      "speech_locale": "ENGLISH_US"
+    }
+  }
+  ```
+
+  `settings` is optional. See the [Nabla Connect API docs](https://nabla-tech.notion.site/nabla-connect-documentation-beta) for the full settings schema.
+
+  ```bash
+  curl -X POST http://localhost:4000/nabla/users \
+    -H 'Content-Type: application/json' \
+    -d '{"provider_email":"provider@example.com","external_provider_id":"prov-456"}'
+  ```
 
 - `POST /nabla/callback`
   Receives Nabla export callbacks, verifies their signature, and logs formatted notes or patient instructions so you can inspect the payloads during development.
@@ -89,3 +131,4 @@ PORT=4000
 
 - Nabla Connect documentation: <https://nabla-tech.notion.site/nabla-connect-documentation-beta>
 - OAuth and authentication guide: <https://nabla-tech.notion.site/nabla-connect-server-authentication>
+- API changelog: <https://nabla-tech.notion.site/nabla-connect-documentation-beta> (see the Changelog section)

@@ -114,6 +114,30 @@ export const nablaCallbackResponseSchema = z.object({
 
 export type NablaCallbackResponse = z.infer<typeof nablaCallbackResponseSchema>;
 
+export const GenerateEncounterUrlRequestSchema = z.object({
+  external_encounter_id: z.string(),
+  external_provider_id: z.string(),
+});
+
+export type GenerateEncounterUrlRequest = z.infer<typeof GenerateEncounterUrlRequestSchema>;
+
+export const ProvisionUserRequestSchema = z.object({
+  provider_email: z.email(),
+  external_provider_id: z.string(),
+  settings: z.unknown().optional(),
+});
+
+export type ProvisionUserRequest = z.infer<typeof ProvisionUserRequestSchema>;
+
+export const ProvisionUserResponseSchema = z.object({
+  provider_email: z.string(),
+  external_provider_id: z.string(),
+  settings: z.unknown(),
+  created_at: z.string(),
+});
+
+export type ProvisionUserResponse = z.infer<typeof ProvisionUserResponseSchema>;
+
 export class HttpError extends Error {
   status: number;
 

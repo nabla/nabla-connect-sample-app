@@ -2,12 +2,16 @@ import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { launchNabla, LaunchNablaQuery } from './launchNabla';
+import { generateEncounterUrl } from './generateEncounterUrl';
+import { provisionUser } from './provisionUser';
 import {
   HttpError,
   LaunchEncounterPayload,
   NablaCallbackBody,
   NablaCallbackResponse,
   nablaCallbackBodySchema,
+  GenerateEncounterUrlRequestSchema,
+  ProvisionUserRequestSchema,
 } from './types';
 import { handleCallback } from './callback';
 import { verifyHmacSignature } from './signatureVerification';
@@ -93,6 +97,37 @@ app.get(
     } catch (error) {
       console.error('Error launching Nabla encounter:', error);
       next(new HttpError(500, 'Error launching Nabla encounter'));
+    }
+  },
+);
+
+app.post(
+  '/nabla/encounters/url',
+  bodyParser.json({ type: 'application/json' }),
+  async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    try {
+      const requestBody = GenerateEncounterUrlRequestSchema.parse(request.body);
+      const encounterUrl = await generateEncounterUrl({
+        baseUrl: process.env.NABLA_URL!,
+        requestBody,
+      });
+      response.status(200).json({ encounter_url: encounterUrl });
+    } catch (error) {
+      next(error instanceof HttpError ? error : new HttpError(500, 'Error generating encounter URL'));
+    }
+  },
+);
+
+app.post(
+  '/nabla/users',
+  bodyParser.json({ type: 'application/json' }),
+  async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    try {
+      const requestBody = ProvisionUserRequestSchema.parse(request.body);
+      const user = await provisionUser({ baseUrl: process.env.NABLA_URL!, requestBody });
+      response.status(200).json(user);
+    } catch (error) {
+      next(error instanceof HttpError ? error : new HttpError(500, 'Error provisioning user'));
     }
   },
 );

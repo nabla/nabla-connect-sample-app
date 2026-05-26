@@ -23,7 +23,7 @@ type LaunchNablaParams = {
 };
 
 export const launchNabla = async ({ baseUrl, requestBody }: LaunchNablaParams): Promise<string> => {
-  const url = new URL(`${baseUrl}/encounter`);
+  const url = new URL(`${baseUrl}/encounters`);
 
   const accessToken = await requestAccessToken({
     baseUrl,
