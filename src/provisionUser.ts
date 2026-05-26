@@ -1,5 +1,10 @@
 import { requestAccessToken } from './requestToken';
-import { ProvisionUserRequest, ProvisionUserResponse, ProvisionUserResponseSchema } from './types';
+import {
+  HttpError,
+  ProvisionUserRequest,
+  ProvisionUserResponse,
+  ProvisionUserResponseSchema,
+} from './types';
 
 type ProvisionUserParams = {
   baseUrl: string;
@@ -32,7 +37,7 @@ export const provisionUser = async ({
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Nabla provision user request failed', response.status, errorText);
-    throw new Error(`Nabla provision user request failed: ${response.status} ${errorText}`);
+    throw new HttpError(response.status, `Nabla provision user request failed: ${errorText}`);
   }
 
   return ProvisionUserResponseSchema.parse(await response.json());

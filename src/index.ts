@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
+import { ZodError } from 'zod';
 import { launchNabla, LaunchNablaQuery } from './launchNabla';
 import { generateEncounterUrl } from './generateEncounterUrl';
 import { provisionUser } from './provisionUser';
@@ -113,7 +114,14 @@ app.post(
       });
       response.status(200).json({ encounter_url: encounterUrl });
     } catch (error) {
-      next(error instanceof HttpError ? error : new HttpError(500, 'Error generating encounter URL'));
+      if (error instanceof HttpError) {
+        next(error);
+      } else if (error instanceof ZodError) {
+        next(new HttpError(400, `Invalid request body: ${error.message}`));
+      } else {
+        console.error('Error generating encounter URL:', error);
+        next(new HttpError(500, 'Error generating encounter URL'));
+      }
     }
   },
 );
@@ -127,7 +135,14 @@ app.post(
       const user = await provisionUser({ baseUrl: process.env.NABLA_URL!, requestBody });
       response.status(200).json(user);
     } catch (error) {
-      next(error instanceof HttpError ? error : new HttpError(500, 'Error provisioning user'));
+      if (error instanceof HttpError) {
+        next(error);
+      } else if (error instanceof ZodError) {
+        next(new HttpError(400, `Invalid request body: ${error.message}`));
+      } else {
+        console.error('Error provisioning user:', error);
+        next(new HttpError(500, 'Error provisioning user'));
+      }
     }
   },
 );
