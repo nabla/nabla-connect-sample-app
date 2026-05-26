@@ -1,6 +1,6 @@
 # Nabla Connect Demo Server
 
-A minimal Express.js backend that demonstrates how to integrate with [Nabla Connect](https://nabla-tech.notion.site/nabla-connect-documentation-beta). It handles OAuth-signed launches, validates callbacks, and prints exported content so you can explore the workflow locally.
+A minimal Express.js backend that demonstrates how to integrate with [Nabla Connect](https://nabla-tech.notion.site/nabla-connect-documentation). It handles OAuth-signed launches, validates callbacks, and prints exported content so you can explore the workflow locally.
 
 ---
 
@@ -114,7 +114,7 @@ PORT=4000
   }
   ```
 
-  `settings` is optional. See the [Nabla Connect API docs](https://nabla-tech.notion.site/nabla-connect-documentation-beta) for the full settings schema.
+  `settings` is optional. See the [Nabla Connect API docs](https://nabla-tech.notion.site/nabla-connect-documentation) for the full settings schema.
 
   ```bash
   curl -X POST http://localhost:4000/nabla/users \
@@ -129,6 +129,6 @@ PORT=4000
 
 ## Further reading
 
-- Nabla Connect documentation: <https://nabla-tech.notion.site/nabla-connect-documentation-beta>
+- Nabla Connect documentation: <https://nabla-tech.notion.site/nabla-connect-documentation>
 - OAuth and authentication guide: <https://nabla-tech.notion.site/nabla-connect-server-authentication>
-- API changelog: <https://nabla-tech.notion.site/nabla-connect-documentation-beta> (see the Changelog section)
+- API changelog: <https://nabla-tech.notion.site/nabla-connect-documentation> (see the Changelog section)
