@@ -114,6 +114,10 @@ export const nablaCallbackResponseSchema = z.object({
 
 export type NablaCallbackResponse = z.infer<typeof nablaCallbackResponseSchema>;
 
+export const EncounterUrlResponseSchema = z.object({
+  encounter_url: z.url(),
+});
+
 export const GenerateEncounterUrlRequestSchema = z.object({
   external_encounter_id: z.string(),
   external_provider_id: z.string(),
@@ -130,7 +134,7 @@ export const ProvisionUserRequestSchema = z.object({
 export type ProvisionUserRequest = z.infer<typeof ProvisionUserRequestSchema>;
 
 export const ProvisionUserResponseSchema = z.object({
-  provider_email: z.string(),
+  provider_email: z.email(),
   external_provider_id: z.string(),
   settings: z.unknown(),
   created_at: z.string(),

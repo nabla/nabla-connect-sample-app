@@ -1,5 +1,5 @@
 import { requestAccessToken } from './requestToken';
-import { GenerateEncounterUrlRequest, LaunchEncounterResponseSchema } from './types';
+import { EncounterUrlResponseSchema, GenerateEncounterUrlRequest, HttpError } from './types';
 
 type GenerateEncounterUrlParams = {
   baseUrl: string;
@@ -32,10 +32,10 @@ export const generateEncounterUrl = async ({
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Nabla generate encounter URL request failed', response.status, errorText);
-    throw new Error(`Nabla generate encounter URL request failed: ${response.status} ${errorText}`);
+    throw new HttpError(response.status, `Nabla generate encounter URL request failed: ${errorText}`);
   }
 
-  const responseJson = LaunchEncounterResponseSchema.parse(await response.json());
+  const responseJson = EncounterUrlResponseSchema.parse(await response.json());
   console.log('Encounter URL generated:', responseJson.encounter_url);
   return responseJson.encounter_url;
 };
