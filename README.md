@@ -35,7 +35,7 @@ yarn install
 Copy `.env.example` to `.env` and fill in every required field:
 
 ```env
-NABLA_URL=https://api.<region>.nabla.com
+NABLA_URL=https://<region>.api.nabla.com
 NABLA_SIGNATURE_SECRET=your-callback-secret
 DEFAULT_PROVIDER_ID=prov-123456
 DEFAULT_PROVIDER_EMAIL=provider@example.com
