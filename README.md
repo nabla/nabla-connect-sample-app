@@ -27,6 +27,7 @@ yarn install
    - `OAUTH_CLIENT_ID`
    - `OAUTH_PRIVATE_KEY` (PEM string)
    - `NABLA_URL` for your region
+   - `NABLA_API_VERSION` (e.g. `2026-03-23`; use `x-nabla-next` only for unreleased preview APIs)
    - `NABLA_SIGNATURE_SECRET` (shared secret used for webhook signing)
    - Optional defaults for `DEFAULT_PROVIDER_ID` and `DEFAULT_PROVIDER_EMAIL`
 
@@ -36,6 +37,7 @@ Copy `.env.example` to `.env` and fill in every required field:
 
 ```env
 NABLA_URL=https://<region>.api.nabla.com
+NABLA_API_VERSION=2026-03-23
 NABLA_SIGNATURE_SECRET=your-callback-secret
 DEFAULT_PROVIDER_ID=prov-123456
 DEFAULT_PROVIDER_EMAIL=provider@example.com
@@ -124,6 +126,36 @@ PORT=4000
 
 - `POST /nabla/callback`
   Receives Nabla export callbacks, verifies their signature, and logs formatted notes or patient instructions so you can inspect the payloads during development.
+
+  `NOTE_EXPORT` payload shape (API version `2026-03-23`):
+
+  ```json
+  {
+    "request_uuid": "…",
+    "type": "NOTE_EXPORT",
+    "data": {
+      "external_patient_id": "…",
+      "external_encounter_id": "…",
+      "external_provider_id": "…",
+      "note": {
+        "sections": [
+          { "content": "…", "title": "…", "category": "ASSESSMENT_AND_PLAN" }
+        ]
+      },
+      "visit_diagnoses": [
+        {
+          "system": "http://hl7.org/fhir/sid/icd-10-cm",
+          "code": "I50.23",
+          "display": "…",
+          "is_hcc": true,
+          "is_mcc": true
+        }
+      ]
+    }
+  }
+  ```
+
+  `visit_diagnoses` may be omitted or `null` before normalization completes; the sample app treats that as an empty list. Some orgs also receive an optional `transcript` field.
 
 ---
 
