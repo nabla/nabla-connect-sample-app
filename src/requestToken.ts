@@ -13,6 +13,11 @@ const responseSchema = z.object({
   access_token: z.string(),
 });
 
+/** PEM keys in .env often use literal `\\n` — jsonwebtoken needs real newlines. */
+function normalizePrivateKey(pem: string): string {
+  return pem.replace(/\\n/g, '\n').trim();
+}
+
 export async function requestAccessToken({
   baseUrl,
   oauthClientId, // from Nabla Connect admin page (https://app.nabla.com/admin/nabla-connect)
@@ -24,6 +29,7 @@ export async function requestAccessToken({
   if (!oauthPrivateKey || oauthPrivateKey.length === 0) {
     throw new HttpError(401, 'OAuth private key is not set');
   }
+  const privateKey = normalizePrivateKey(oauthPrivateKey);
   const now = Math.floor(Date.now() / 1000);
   const clientAssertion = jwt.sign(
     {
@@ -34,7 +40,7 @@ export async function requestAccessToken({
       iat: now,
       exp: now + 60,
     },
-    oauthPrivateKey,
+    privateKey,
     { algorithm: 'RS256' },
   );
 

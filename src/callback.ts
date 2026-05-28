@@ -57,6 +57,24 @@ const formatPatientInstructionsLog = (body: NablaPatientInstructionsExportCallba
   ].join('\n');
 };
 
+const formatVisitDiagnosesLog = (body: NablaNoteExportBody) => {
+  const { visit_diagnoses: visitDiagnoses } = body.data;
+
+  if (visitDiagnoses.length === 0) {
+    return 'Visit diagnoses: (none)';
+  }
+
+  const items = visitDiagnoses
+    .map((diagnosis, idx) => {
+      const flags = [diagnosis.is_hcc && 'HCC', diagnosis.is_mcc && 'MCC'].filter(Boolean).join(' ');
+      const flagSuffix = flags ? ` [${flags}]` : '';
+      return `  ${idx + 1}. ${diagnosis.display} (${diagnosis.code})${flagSuffix}`;
+    })
+    .join('\n');
+
+  return `Visit diagnoses:\n${items}`;
+};
+
 const formatTranscriptLog = (body: NablaNoteExportBody) => {
   const transcriptItems = body.data.transcript?.items;
 
@@ -78,6 +96,7 @@ export const handleCallback = async (body: NablaCallbackBody) => {
   switch (body.type) {
     case 'NOTE_EXPORT':
       console.log(formatNoteExportLog(body));
+      console.log(formatVisitDiagnosesLog(body));
       console.log(formatTranscriptLog(body));
       break;
     case 'PATIENT_INSTRUCTIONS_EXPORT':

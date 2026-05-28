@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import bodyParser from 'body-parser';
 import { ZodError } from 'zod';
 import { launchNabla, LaunchNablaQuery } from './launchNabla';
 import { generateEncounterUrl } from './generateEncounterUrl';
@@ -8,7 +7,6 @@ import { provisionUser } from './provisionUser';
 import {
   HttpError,
   LaunchEncounterPayload,
-  NablaCallbackBody,
   NablaCallbackResponse,
   nablaCallbackBodySchema,
   GenerateEncounterUrlRequestSchema,
@@ -25,6 +23,7 @@ const port = Number(process.env.PORT ?? 4000);
 const signingSecret = process.env.NABLA_SIGNATURE_SECRET;
 const expectedEnvVars = [
   'NABLA_URL',
+  'NABLA_API_VERSION',
   'NABLA_SIGNATURE_SECRET',
   'OAUTH_PRIVATE_KEY',
   'OAUTH_CLIENT_ID',
@@ -104,7 +103,7 @@ app.get(
 
 app.post(
   '/nabla/encounters/url',
-  bodyParser.json({ type: 'application/json' }),
+  express.json({ type: 'application/json' }),
   async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
       const requestBody = GenerateEncounterUrlRequestSchema.parse(request.body);
@@ -128,7 +127,7 @@ app.post(
 
 app.post(
   '/nabla/users',
-  bodyParser.json({ type: 'application/json' }),
+  express.json({ type: 'application/json' }),
   async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
       const requestBody = ProvisionUserRequestSchema.parse(request.body);
@@ -149,24 +148,32 @@ app.post(
 
 app.post(
   '/nabla/callback',
-  bodyParser.json({
-    type: 'application/json',
-    verify: function (request, response, buffer) {
+  express.raw({ type: 'application/json' }),
+  async (
+    request: express.Request,
+    response: express.Response<NablaCallbackResponse>,
+    next: express.NextFunction,
+  ) => {
+    const rawBody = Buffer.isBuffer(request.body)
+      ? request.body
+      : Buffer.from(String(request.body ?? ''));
+
+    try {
       verifyHmacSignature({
         timestamp: request.headers['x-nabla-connect-timestamp'] as string,
         signatures: request.headers['x-nabla-connect-signature'] as string,
-        rawBody: buffer,
+        rawBody,
         key: signingSecret || 'insecure-development-signing-secret',
       });
-    },
-  }),
-  async (
-    request: express.Request<unknown, unknown, NablaCallbackBody, unknown>,
-    response: express.Response<NablaCallbackResponse>,
-  ) => {
-    const callbackBody = nablaCallbackBodySchema.parse(request.body);
-    await handleCallback(callbackBody);
-    response.status(200).json({ request_uuid: callbackBody.request_uuid });
+
+      const callbackBody = nablaCallbackBodySchema.parse(
+        JSON.parse(rawBody.toString('utf8')),
+      );
+      await handleCallback(callbackBody);
+      response.status(200).json({ request_uuid: callbackBody.request_uuid });
+    } catch (error) {
+      next(error);
+    }
   },
 );
 

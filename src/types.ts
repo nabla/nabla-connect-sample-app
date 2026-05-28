@@ -36,22 +36,21 @@ export type LaunchEncounterPayload = z.infer<typeof LaunchEncounterPayloadSchema
 export type LaunchEncounterResponse = z.infer<typeof LaunchEncounterResponseSchema>;
 
 export const noteSectionSchema = z.object({
+  content: z.string(),
   title: z.string(),
   category: z.string().nullable(),
-  content: z.string(),
 });
 
-export const encounterNoteSchema = z.object({
+export const noteExportNoteSchema = z.object({
   sections: z.array(noteSectionSchema),
-  free_text: z.string().optional(),
 });
 
 export const patientInstructionsSchema = z.object({
   instructions: z.array(z.string()),
 });
 
-export type EncounterNote = z.infer<typeof encounterNoteSchema>;
-export type EncounterNoteSection = z.infer<typeof noteSectionSchema>;
+export type NoteExportNote = z.infer<typeof noteExportNoteSchema>;
+export type NoteExportSection = z.infer<typeof noteSectionSchema>;
 
 const baseCallbackSchema = z.object({
   request_uuid: z.string(),
@@ -67,24 +66,49 @@ const transcriptItemSchema = z.object({
 });
 
 export const transcriptSchema = z.preprocess(
-  (value) => (Array.isArray(value) ? { items: value } : value),
-  z.object({
-    items: z.array(transcriptItemSchema),
-  }),
+  (value) => {
+    if (value == null) return undefined;
+    if (Array.isArray(value)) return { items: value };
+    return value;
+  },
+  z
+    .object({
+      items: z.array(transcriptItemSchema),
+    })
+    .optional(),
 );
 
-export type Transcript = z.infer<typeof transcriptSchema>;
-export type TranscriptItem = z.infer<typeof transcriptSchema>['items'][number];
+export type Transcript = NonNullable<z.infer<typeof transcriptSchema>>;
+export type TranscriptItem = Transcript['items'][number];
+
+export const visitDiagnosisEntrySchema = z.object({
+  system: z.string(),
+  code: z.string(),
+  display: z.string(),
+  is_hcc: z.boolean(),
+  is_mcc: z.boolean(),
+});
+
+export type VisitDiagnosisEntry = z.infer<typeof visitDiagnosisEntrySchema>;
+
+/** NOTE_EXPORT callback payload (2026-03-23). `transcript` is an optional org-level extension. */
+export const noteExportDataSchema = z.object({
+  external_patient_id: z.string(),
+  external_encounter_id: z.string(),
+  external_provider_id: z.string(),
+  note: noteExportNoteSchema,
+  visit_diagnoses: z.preprocess(
+    (value) => (value == null ? [] : value),
+    z.array(visitDiagnosisEntrySchema),
+  ),
+  transcript: transcriptSchema,
+});
+
+export type NoteExportData = z.infer<typeof noteExportDataSchema>;
 
 export const noteExportNablaCallbackBodySchema = baseCallbackSchema.extend({
   type: z.literal('NOTE_EXPORT'),
-  data: z.object({
-    external_patient_id: z.string(),
-    external_encounter_id: z.string(),
-    external_provider_id: z.string(),
-    note: encounterNoteSchema,
-    transcript: transcriptSchema.optional(),
-  }),
+  data: noteExportDataSchema,
 });
 
 export const patientInstructionsExportNablaCallbackBodySchema = baseCallbackSchema.extend({
