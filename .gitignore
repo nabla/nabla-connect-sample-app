@@ -1,11 +1,14 @@
 # Dependencies
 node_modules/
+.pnp.cjs
+.pnp.loader.mjs
 
 # Build artifacts
 dist/
 
 # Environment configuration
 .env
+public.pem
 
 # Logs
 logs/
@@ -17,3 +20,6 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Yarn state
+.yarn/install-state.gz
