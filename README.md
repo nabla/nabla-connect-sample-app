@@ -71,21 +71,22 @@ PORT=4000
 - `GET /nabla/open/:encounterId`  
   Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
 
-  | Query param           | Required | Description                                                             |
-  | --------------------- | -------- | ----------------------------------------------------------------------- |
-  | `patientId`           | Yes      | External patient identifier used by your system.                        |
-  | `patientName`         | No       | Patient full name; fills encounter metadata.                            |
-  | `patientBirthDate`    | No       | Patient date of birth (ISO date string).                                |
-  | `patientGender`       | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.                            |
+  | Query param           | Required | Description                                                            |
+  | --------------------- | -------- | ---------------------------------------------------------------------- |
+  | `patientId`           | Yes      | External patient identifier used by your system.                       |
+  | `patientName`         | No       | Patient full name; fills encounter metadata.                           |
+  | `patientBirthDate`    | No       | Patient date of birth (ISO date string).                               |
+  | `patientGender`       | No       | One of `FEMALE`, `MALE`, `OTHER`, `UNKNOWN`.                           |
   | `patientPronouns`     | No       | One of `HE_HIM`, `SHE_HER`, `THEY_THEM`.                               |
-  | `providerEmail`       | No       | Email of the provider launching the encounter.                          |
-  | `providerId`          | No       | External provider identifier; defaults apply.                           |
-  | `unstructuredContext` | No       | Free-text patient context used during note generation (max 700 chars).  |
+  | `providerEmail`       | No       | Email of the provider launching the encounter.                         |
+  | `providerId`          | No       | External provider identifier; defaults apply.                          |
+  | `unstructuredContext` | No       | Free-text patient context used during note generation (max 700 chars). |
 
 - `POST /nabla/encounters/url`  
   Generates a URL for an **existing** Nabla encounter (`POST /encounters/url`). Useful when the encounter was already created and you only need a fresh login link.
 
   Request body:
+
   ```json
   {
     "external_encounter_id": "enc-123",
@@ -105,6 +106,7 @@ PORT=4000
   Upserts a provider user (`POST /users`). Matching is done on `external_provider_id`. Creates the user if new; updates settings if the user already exists. Returns `409` if `external_provider_id` and `provider_email` identify two different existing users.
 
   Request body:
+
   ```json
   {
     "provider_email": "provider@example.com",
@@ -138,9 +140,7 @@ PORT=4000
       "external_encounter_id": "…",
       "external_provider_id": "…",
       "note": {
-        "sections": [
-          { "content": "…", "title": "…", "category": "ASSESSMENT_AND_PLAN" }
-        ]
+        "sections": [{ "content": "…", "title": "…", "category": "ASSESSMENT_AND_PLAN" }]
       },
       "visit_diagnoses": [
         {
@@ -156,6 +156,49 @@ PORT=4000
   ```
 
   `visit_diagnoses` may be omitted or `null` before normalization completes; the sample app treats that as an empty list. Some orgs also receive an optional `transcript` field.
+
+- `POST /oauth/token`
+  Mock OAuth2 client-credentials token endpoint (RFC 6749 §4.4), used to test bearer-token authentication on the callback. Only enabled when `CALLBACK_OAUTH_CLIENT_ID` and `CALLBACK_OAUTH_CLIENT_SECRET` are set.
+
+---
+
+## Testing OAuth client-credentials callback auth
+
+Nabla can authenticate to your callback endpoint with the OAuth2 client-credentials grant: before each delivery it fetches a token from your token endpoint and attaches it as `Authorization: Bearer <token>`. This app can play the customer side:
+
+1. Set `CALLBACK_OAUTH_CLIENT_ID` and `CALLBACK_OAUTH_CLIENT_SECRET` in `.env` and restart the server. The app now serves `POST /oauth/token` and **requires** a valid bearer token on `POST /nabla/callback` (in addition to the HMAC signature).
+2. Configure the same credentials in Nabla via the `updateNablaConnectConfiguration` mutation:
+
+   ```graphql
+   mutation {
+     updateNablaConnectConfiguration(
+       input: {
+         oauthClientCredentials: {
+           tokenEndpoint: "https://<your-tunnel-host>/oauth/token"
+           variant: FORM_URL_ENCODED # or JSON_BODY — both are supported by this app
+           clientId: "<CALLBACK_OAUTH_CLIENT_ID>"
+           clientSecret: "<CALLBACK_OAUTH_CLIENT_SECRET>"
+         }
+       }
+     ) {
+       organization {
+         uuid
+       }
+     }
+   }
+   ```
+
+3. Trigger a note export: the app logs the token grant (`Issued OAuth access token …`) followed by the verified bearer on the callback (`Verified callback bearer token …`).
+4. To exercise the failure path, configure a wrong `clientSecret` in Nabla: the token endpoint answers `401 {"error": "invalid_client"}` and Nabla fails the callback with `NABLA_CONNECT_OAUTH_TOKEN_FETCH_FAILED` instead of sending it unauthenticated.
+
+Smoke-test the token endpoint directly:
+
+```bash
+curl -s -X POST http://localhost:4000/oauth/token \
+  -d 'grant_type=client_credentials&client_id=<id>&client_secret=<secret>&audience=http://localhost:4000/nabla/callback'
+```
+
+To remove the configuration in Nabla, pass `removeOauthClientCredentials: true` to the same mutation.
 
 ---
 
