@@ -13,6 +13,11 @@ import {
   ProvisionUserRequestSchema,
 } from './types';
 import { handleCallback } from './callback';
+import {
+  configuredCallbackOauthCredentials,
+  handleOauthTokenRequest,
+  verifyCallbackBearerToken,
+} from './oauthTokenServer';
 import { verifyHmacSignature } from './signatureVerification';
 import { renderEncounterPage } from './renderEncounterPage';
 
@@ -39,6 +44,16 @@ if (missingEnvVars.length > 0) {
 
 if (!signingSecret) {
   console.warn('NABLA_SIGNATURE_SECRET not set; falling back to insecure development secret.');
+}
+
+if (configuredCallbackOauthCredentials()) {
+  console.log(
+    'Callback OAuth client credentials configured; serving POST /oauth/token and requiring a bearer token on POST /nabla/callback.',
+  );
+} else {
+  console.warn(
+    'CALLBACK_OAUTH_CLIENT_ID / CALLBACK_OAUTH_CLIENT_SECRET not set; callback bearer-token verification is disabled.',
+  );
 }
 
 app.get(
@@ -147,6 +162,13 @@ app.post(
 );
 
 app.post(
+  '/oauth/token',
+  express.json({ type: 'application/json' }),
+  express.urlencoded({ extended: false }),
+  handleOauthTokenRequest,
+);
+
+app.post(
   '/nabla/callback',
   express.raw({ type: 'application/json' }),
   async (
@@ -159,6 +181,7 @@ app.post(
       : Buffer.from(String(request.body ?? ''));
 
     try {
+      verifyCallbackBearerToken(request.headers.authorization);
       verifyHmacSignature({
         timestamp: request.headers['x-nabla-connect-timestamp'] as string,
         signatures: request.headers['x-nabla-connect-signature'] as string,
@@ -166,9 +189,7 @@ app.post(
         key: signingSecret || 'insecure-development-signing-secret',
       });
 
-      const callbackBody = nablaCallbackBodySchema.parse(
-        JSON.parse(rawBody.toString('utf8')),
-      );
+      const callbackBody = nablaCallbackBodySchema.parse(JSON.parse(rawBody.toString('utf8')));
       await handleCallback(callbackBody);
       response.status(200).json({ request_uuid: callbackBody.request_uuid });
     } catch (error) {
