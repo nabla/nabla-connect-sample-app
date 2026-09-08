@@ -68,6 +68,9 @@ PORT=4000
 
 ## Endpoints
 
+- `GET /`  
+  Demo landing page. A form to start an encounter, and a button to open the settings without an encounter.
+
 - `GET /nabla/open/:encounterId`  
   Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
 

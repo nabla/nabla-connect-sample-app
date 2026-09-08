@@ -22,6 +22,7 @@ import {
 } from './oauthTokenServer';
 import { verifyHmacSignature } from './signatureVerification';
 import { renderEncounterPage } from './renderEncounterPage';
+import { renderHomePage } from './renderHomePage';
 import { renderSettingsPage } from './renderSettingsPage';
 
 dotenv.config();
@@ -59,10 +60,24 @@ if (configuredCallbackOauthCredentials()) {
   );
 }
 
+app.get('/', (_request: express.Request, response: express.Response) => {
+  response.send(
+    renderHomePage({
+      defaultProviderId: process.env.DEFAULT_PROVIDER_ID,
+      defaultProviderEmail: process.env.DEFAULT_PROVIDER_EMAIL,
+    }),
+  );
+});
+
 app.get(
   '/nabla/open/settings',
   async (
-    request: express.Request<unknown, unknown, unknown, { providerEmail?: string; providerId?: string }>,
+    request: express.Request<
+      unknown,
+      unknown,
+      unknown,
+      { providerEmail?: string; providerId?: string }
+    >,
     response,
     next: express.NextFunction,
   ) => {
