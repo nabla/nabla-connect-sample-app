@@ -68,6 +68,12 @@ PORT=4000
 
 ## Endpoints
 
+- `GET /`  
+  Six-step walkthrough comparing onboarding and direct launches from settings and encounters.
+
+- `POST /nabla/encounters`
+  Creates or updates an encounter (`POST /encounters`) and returns its one-time login URL. The walkthrough uses this proxy for its encounter steps.
+
 - `GET /nabla/open/:encounterId`  
   Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
 
@@ -100,6 +106,32 @@ PORT=4000
   curl -X POST http://localhost:4000/nabla/encounters/url \
     -H 'Content-Type: application/json' \
     -d '{"external_encounter_id":"enc-123","external_provider_id":"prov-456"}'
+  ```
+
+- `GET /nabla/open/settings`  
+  Generates a settings URL (`POST /settings/url`) for an existing provider. No encounter is created. Preview API: set `NABLA_API_VERSION=x-nabla-next`.
+
+  | Query param  | Required | Description                                    |
+  | ------------ | -------- | ---------------------------------------------- |
+  | `providerId` | No       | External provider identifier; defaults apply. |
+
+- `POST /nabla/settings/url`  
+  Generates a URL that opens Nabla settings for an existing provider (`POST /settings/url`). No encounter is created.
+
+  Request body:
+
+  ```json
+  {
+    "external_provider_id": "prov-456"
+  }
+  ```
+
+  Response: `{ "settings_url": "https://..." }`
+
+  ```bash
+  curl -X POST http://localhost:4000/nabla/settings/url \
+    -H 'Content-Type: application/json' \
+    -d '{"external_provider_id":"prov-456"}'
   ```
 
 - `POST /nabla/users`  
