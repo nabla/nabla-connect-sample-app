@@ -102,6 +102,33 @@ PORT=4000
     -d '{"external_encounter_id":"enc-123","external_provider_id":"prov-456"}'
   ```
 
+- `GET /nabla/open/settings`  
+  Upserts the provider (`POST /users`) then generates a settings URL (`POST /settings/url`) with no encounter. Preview API: set `NABLA_API_VERSION=x-nabla-next`.
+
+  | Query param     | Required | Description                                    |
+  | --------------- | -------- | ---------------------------------------------- |
+  | `providerEmail` | No       | Email of the provider. Defaults apply.        |
+  | `providerId`    | No       | External provider identifier; defaults apply. |
+
+- `POST /nabla/settings/url`  
+  Generates a URL that opens Nabla settings for an existing provider (`POST /settings/url`). No encounter is created.
+
+  Request body:
+
+  ```json
+  {
+    "external_provider_id": "prov-456"
+  }
+  ```
+
+  Response: `{ "settings_url": "https://..." }`
+
+  ```bash
+  curl -X POST http://localhost:4000/nabla/settings/url \
+    -H 'Content-Type: application/json' \
+    -d '{"external_provider_id":"prov-456"}'
+  ```
+
 - `POST /nabla/users`  
   Upserts a provider user (`POST /users`). Matching is done on `external_provider_id`. Creates the user if new; updates settings if the user already exists. Returns `409` if `external_provider_id` and `provider_email` identify two different existing users.
 
