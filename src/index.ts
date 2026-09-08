@@ -8,6 +8,7 @@ import { provisionUser } from './provisionUser';
 import {
   HttpError,
   LaunchEncounterPayload,
+  LaunchEncounterPayloadSchema,
   NablaCallbackResponse,
   nablaCallbackBodySchema,
   GenerateEncounterUrlRequestSchema,
@@ -63,8 +64,9 @@ if (configuredCallbackOauthCredentials()) {
 app.get('/', (_request: express.Request, response: express.Response) => {
   response.send(
     renderHomePage({
-      defaultProviderId: process.env.DEFAULT_PROVIDER_ID,
-      defaultProviderEmail: process.env.DEFAULT_PROVIDER_EMAIL,
+      encounterApiUrl: `${process.env.NABLA_URL ?? ''}/encounters`,
+      usersApiUrl: `${process.env.NABLA_URL ?? ''}/users`,
+      settingsApiUrl: `${process.env.NABLA_URL ?? ''}/settings/url`,
     }),
   );
 });
@@ -72,31 +74,18 @@ app.get('/', (_request: express.Request, response: express.Response) => {
 app.get(
   '/nabla/open/settings',
   async (
-    request: express.Request<
-      unknown,
-      unknown,
-      unknown,
-      { providerEmail?: string; providerId?: string }
-    >,
+    request: express.Request<unknown, unknown, unknown, { providerId?: string }>,
     response,
     next: express.NextFunction,
   ) => {
     const providerId = request.query.providerId || process.env.DEFAULT_PROVIDER_ID!;
-    const providerEmail = request.query.providerEmail || process.env.DEFAULT_PROVIDER_EMAIL!;
 
     try {
-      await provisionUser({
-        baseUrl: process.env.NABLA_URL!,
-        requestBody: {
-          external_provider_id: providerId,
-          provider_email: providerEmail,
-        },
-      });
       const settingsUrl = await generateSettingsUrl({
         baseUrl: process.env.NABLA_URL!,
         requestBody: { external_provider_id: providerId },
       });
-      response.send(renderSettingsPage({ settingsUrl, providerEmail, providerId }));
+      response.send(renderSettingsPage({ settingsUrl, providerId }));
     } catch (error) {
       console.error('Error launching Nabla settings:', error);
       next(new HttpError(500, 'Error launching Nabla settings'));
@@ -160,6 +149,30 @@ app.get(
     } catch (error) {
       console.error('Error launching Nabla encounter:', error);
       next(new HttpError(500, 'Error launching Nabla encounter'));
+    }
+  },
+);
+
+app.post(
+  '/nabla/encounters',
+  express.json({ type: 'application/json' }),
+  async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    try {
+      const requestBody = LaunchEncounterPayloadSchema.parse(request.body);
+      const encounterUrl = await launchNabla({
+        baseUrl: process.env.NABLA_URL!,
+        requestBody,
+      });
+      response.status(200).json({ encounter_url: encounterUrl });
+    } catch (error) {
+      if (error instanceof HttpError) {
+        next(error);
+      } else if (error instanceof ZodError) {
+        next(new HttpError(400, `Invalid request body: ${error.message}`));
+      } else {
+        console.error('Error launching encounter:', error);
+        next(new HttpError(500, 'Error launching encounter'));
+      }
     }
   },
 );

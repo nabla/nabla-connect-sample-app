@@ -2,7 +2,6 @@ import ejs from 'ejs';
 
 type RenderSettingsPageParams = {
   settingsUrl: string;
-  providerEmail?: string;
   providerId?: string;
 };
 
@@ -71,13 +70,9 @@ const formatValue = (value: string | null | undefined) => (value ? value : '—'
 
 export const renderSettingsPage = ({
   settingsUrl,
-  providerEmail,
   providerId,
 }: RenderSettingsPageParams): string => {
-  const providerContext = [
-    { label: 'Provider Email', value: formatValue(providerEmail) },
-    { label: 'Provider ID', value: formatValue(providerId) },
-  ];
+  const providerContext = [{ label: 'Provider ID', value: formatValue(providerId) }];
 
   return ejs.render(settingsTemplate, { settingsUrl, providerContext }, { rmWhitespace: true });
 };
