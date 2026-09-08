@@ -69,7 +69,10 @@ PORT=4000
 ## Endpoints
 
 - `GET /`  
-  Demo landing page. A form to start an encounter, and a button to open the settings without an encounter.
+  Six-step walkthrough comparing onboarding and direct launches from settings and encounters.
+
+- `POST /nabla/encounters`
+  Creates or updates an encounter (`POST /encounters`) and returns its one-time login URL. The walkthrough uses this proxy for its encounter steps.
 
 - `GET /nabla/open/:encounterId`  
   Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
@@ -106,12 +109,11 @@ PORT=4000
   ```
 
 - `GET /nabla/open/settings`  
-  Upserts the provider (`POST /users`) then generates a settings URL (`POST /settings/url`) with no encounter. Preview API: set `NABLA_API_VERSION=x-nabla-next`.
+  Generates a settings URL (`POST /settings/url`) for an existing provider. No encounter is created. Preview API: set `NABLA_API_VERSION=x-nabla-next`.
 
-  | Query param     | Required | Description                                    |
-  | --------------- | -------- | ---------------------------------------------- |
-  | `providerEmail` | No       | Email of the provider. Defaults apply.        |
-  | `providerId`    | No       | External provider identifier; defaults apply. |
+  | Query param  | Required | Description                                    |
+  | ------------ | -------- | ---------------------------------------------- |
+  | `providerId` | No       | External provider identifier; defaults apply. |
 
 - `POST /nabla/settings/url`  
   Generates a URL that opens Nabla settings for an existing provider (`POST /settings/url`). No encounter is created.
