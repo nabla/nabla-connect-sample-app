@@ -3,6 +3,7 @@ import express from 'express';
 import { ZodError } from 'zod';
 import { launchNabla, LaunchNablaQuery } from './launchNabla';
 import { generateEncounterUrl } from './generateEncounterUrl';
+import { generateSettingsUrl } from './generateSettingsUrl';
 import { provisionUser } from './provisionUser';
 import {
   HttpError,
@@ -10,6 +11,7 @@ import {
   NablaCallbackResponse,
   nablaCallbackBodySchema,
   GenerateEncounterUrlRequestSchema,
+  GenerateSettingsUrlRequestSchema,
   ProvisionUserRequestSchema,
 } from './types';
 import { handleCallback } from './callback';
@@ -20,6 +22,7 @@ import {
 } from './oauthTokenServer';
 import { verifyHmacSignature } from './signatureVerification';
 import { renderEncounterPage } from './renderEncounterPage';
+import { renderSettingsPage } from './renderSettingsPage';
 
 dotenv.config();
 
@@ -55,6 +58,36 @@ if (configuredCallbackOauthCredentials()) {
     'CALLBACK_OAUTH_CLIENT_ID / CALLBACK_OAUTH_CLIENT_SECRET not set; callback bearer-token verification is disabled.',
   );
 }
+
+app.get(
+  '/nabla/open/settings',
+  async (
+    request: express.Request<unknown, unknown, unknown, { providerEmail?: string; providerId?: string }>,
+    response,
+    next: express.NextFunction,
+  ) => {
+    const providerId = request.query.providerId || process.env.DEFAULT_PROVIDER_ID!;
+    const providerEmail = request.query.providerEmail || process.env.DEFAULT_PROVIDER_EMAIL!;
+
+    try {
+      await provisionUser({
+        baseUrl: process.env.NABLA_URL!,
+        requestBody: {
+          external_provider_id: providerId,
+          provider_email: providerEmail,
+        },
+      });
+      const settingsUrl = await generateSettingsUrl({
+        baseUrl: process.env.NABLA_URL!,
+        requestBody: { external_provider_id: providerId },
+      });
+      response.send(renderSettingsPage({ settingsUrl, providerEmail, providerId }));
+    } catch (error) {
+      console.error('Error launching Nabla settings:', error);
+      next(new HttpError(500, 'Error launching Nabla settings'));
+    }
+  },
+);
 
 app.get(
   '/nabla/open/:encounterId',
@@ -135,6 +168,30 @@ app.post(
       } else {
         console.error('Error generating encounter URL:', error);
         next(new HttpError(500, 'Error generating encounter URL'));
+      }
+    }
+  },
+);
+
+app.post(
+  '/nabla/settings/url',
+  express.json({ type: 'application/json' }),
+  async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    try {
+      const requestBody = GenerateSettingsUrlRequestSchema.parse(request.body);
+      const settingsUrl = await generateSettingsUrl({
+        baseUrl: process.env.NABLA_URL!,
+        requestBody,
+      });
+      response.status(200).json({ settings_url: settingsUrl });
+    } catch (error) {
+      if (error instanceof HttpError) {
+        next(error);
+      } else if (error instanceof ZodError) {
+        next(new HttpError(400, `Invalid request body: ${error.message}`));
+      } else {
+        console.error('Error generating settings URL:', error);
+        next(new HttpError(500, 'Error generating settings URL'));
       }
     }
   },

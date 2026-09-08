@@ -149,6 +149,16 @@ export const GenerateEncounterUrlRequestSchema = z.object({
 
 export type GenerateEncounterUrlRequest = z.infer<typeof GenerateEncounterUrlRequestSchema>;
 
+export const SettingsUrlResponseSchema = z.object({
+  settings_url: z.url(),
+});
+
+export const GenerateSettingsUrlRequestSchema = z.object({
+  external_provider_id: z.string(),
+});
+
+export type GenerateSettingsUrlRequest = z.infer<typeof GenerateSettingsUrlRequestSchema>;
+
 export const ProvisionUserRequestSchema = z.object({
   provider_email: z.email(),
   external_provider_id: z.string(),
