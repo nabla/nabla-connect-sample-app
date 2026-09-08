@@ -13,6 +13,7 @@ type DemoStep = {
   endpoint: string;
   proxyEndpoint: string;
   payload: object;
+  startLabel: string;
   resultField?: 'settings_url' | 'encounter_url';
 };
 
@@ -127,6 +128,27 @@ const homeTemplate = `<!DOCTYPE html>
       .status { min-height: 20px; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
       .status.success { color: #15803d; }
       .status.error { color: #b91c1c; }
+      .viewer {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+      }
+      .viewer[hidden] { display: none; }
+      .viewer-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: #f1f5f9;
+      }
+      .viewer-title { flex: 1; font-size: 13px; font-weight: 650; }
+      .viewer-close { width: auto; padding: 7px 14px; background: #0f172a; }
+      .viewer-close:hover { background: #1e293b; }
+      .viewer iframe { flex: 1; width: 100%; border: 0; }
     </style>
   </head>
   <body>
@@ -156,7 +178,8 @@ const homeTemplate = `<!DOCTYPE html>
               type="button"
               data-proxy-endpoint="<%= step.proxyEndpoint %>"
               data-result-field="<%= step.resultField ?? '' %>"
-            >Start</button>
+              data-start-label="<%= step.startLabel %>"
+            ><%= step.startLabel %></button>
             <button class="next-button" type="button" hidden>
               <%= index === steps.length - 1 ? 'Restart demo' : 'Next' %>
             </button>
@@ -166,10 +189,37 @@ const homeTemplate = `<!DOCTYPE html>
       <% }) %>
     </main>
 
+    <div id="viewer" class="viewer" hidden>
+      <div class="viewer-bar">
+        <span id="viewer-title" class="viewer-title"></span>
+        <button id="viewer-close" class="viewer-close" type="button">Close</button>
+      </div>
+      <iframe id="viewer-frame" title="Nabla" allow="microphone"></iframe>
+    </div>
+
     <script>
       var slides = Array.from(document.querySelectorAll('.slide'));
       var dots = Array.from(document.querySelectorAll('.progress-dot'));
+      var viewer = document.getElementById('viewer');
+      var viewerFrame = document.getElementById('viewer-frame');
+      var viewerTitle = document.getElementById('viewer-title');
       var currentStep = 0;
+
+      function openViewer(url, title) {
+        viewerTitle.textContent = title;
+        viewerFrame.src = url;
+        viewer.hidden = false;
+      }
+
+      function closeViewer() {
+        viewer.hidden = true;
+        viewerFrame.src = 'about:blank';
+      }
+
+      document.getElementById('viewer-close').addEventListener('click', closeViewer);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !viewer.hidden) closeViewer();
+      });
 
       function showStep(index) {
         currentStep = index;
@@ -188,7 +238,6 @@ const homeTemplate = `<!DOCTYPE html>
           var status = slide.querySelector('.status');
           var nextButton = slide.querySelector('.next-button');
           var resultField = button.dataset.resultField;
-          var launchWindow = resultField ? window.open('', '_blank') : null;
 
           button.disabled = true;
           nextButton.hidden = true;
@@ -207,21 +256,16 @@ const homeTemplate = `<!DOCTYPE html>
               throw new Error(body.errorMessage || 'Request failed with status ' + response.status);
             }
             if (resultField) {
-              if (launchWindow) {
-                launchWindow.location = body[resultField];
-              } else {
-                window.open(body[resultField], '_blank');
-              }
-              status.textContent = 'Launched in a new tab. Complete the flow, then return here.';
+              openViewer(body[resultField], slide.querySelector('h2').textContent);
+              status.textContent = 'Opened in the embedded viewer. Close it to come back here.';
             } else {
               status.textContent =
                 'Created ' + body.external_provider_id + ' (' + body.provider_email + ').';
             }
             status.classList.add('success');
-            button.textContent = 'Start again';
+            button.textContent = button.dataset.startLabel + ' again';
             nextButton.hidden = false;
           } catch (error) {
-            if (launchWindow) launchWindow.close();
             status.classList.add('error');
             status.textContent = error.message || 'Request failed';
           } finally {
@@ -276,6 +320,7 @@ export const renderHomePage = ({
         external_provider_id: settingsProviderId,
         provider_email: settingsProviderEmail,
       },
+      startLabel: 'Create user',
     },
     {
       title: 'Launch onboarding from settings',
@@ -284,6 +329,7 @@ export const renderHomePage = ({
       endpoint: settingsApiUrl,
       proxyEndpoint: '/nabla/settings/url',
       payload: { external_provider_id: settingsProviderId },
+      startLabel: 'Open settings',
       resultField: 'settings_url',
     },
     {
@@ -293,6 +339,7 @@ export const renderHomePage = ({
       endpoint: settingsApiUrl,
       proxyEndpoint: '/nabla/settings/url',
       payload: { external_provider_id: settingsProviderId },
+      startLabel: 'Open settings',
       resultField: 'settings_url',
     },
     {
@@ -305,6 +352,7 @@ export const renderHomePage = ({
         external_provider_id: encounterProviderId,
         provider_email: encounterProviderEmail,
       },
+      startLabel: 'Create user',
     },
     {
       title: 'Launch onboarding from an encounter',
@@ -313,6 +361,7 @@ export const renderHomePage = ({
       endpoint: encounterApiUrl,
       proxyEndpoint: '/nabla/encounters',
       payload: encounterPayload,
+      startLabel: 'Start encounter',
       resultField: 'encounter_url',
     },
     {
@@ -326,6 +375,7 @@ export const renderHomePage = ({
         external_patient_id: `patient-${shortUuid()}`,
         external_encounter_id: `encounter-${shortUuid()}`,
       },
+      startLabel: 'Start encounter',
       resultField: 'encounter_url',
     },
   ];
