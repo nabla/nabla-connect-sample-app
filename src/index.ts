@@ -8,7 +8,6 @@ import { provisionUser } from './provisionUser';
 import {
   HttpError,
   LaunchEncounterPayload,
-  LaunchEncounterPayloadSchema,
   NablaCallbackResponse,
   nablaCallbackBodySchema,
   GenerateEncounterUrlRequestSchema,
@@ -23,7 +22,6 @@ import {
 } from './oauthTokenServer';
 import { verifyHmacSignature } from './signatureVerification';
 import { renderEncounterPage } from './renderEncounterPage';
-import { renderHomePage } from './renderHomePage';
 import { renderSettingsPage } from './renderSettingsPage';
 
 dotenv.config();
@@ -60,16 +58,6 @@ if (configuredCallbackOauthCredentials()) {
     'CALLBACK_OAUTH_CLIENT_ID / CALLBACK_OAUTH_CLIENT_SECRET not set; callback bearer-token verification is disabled.',
   );
 }
-
-app.get('/', (_request: express.Request, response: express.Response) => {
-  response.send(
-    renderHomePage({
-      encounterApiUrl: `${process.env.NABLA_URL ?? ''}/encounters`,
-      usersApiUrl: `${process.env.NABLA_URL ?? ''}/users`,
-      settingsApiUrl: `${process.env.NABLA_URL ?? ''}/settings/url`,
-    }),
-  );
-});
 
 app.get(
   '/nabla/open/settings',
@@ -149,30 +137,6 @@ app.get(
     } catch (error) {
       console.error('Error launching Nabla encounter:', error);
       next(new HttpError(500, 'Error launching Nabla encounter'));
-    }
-  },
-);
-
-app.post(
-  '/nabla/encounters',
-  express.json({ type: 'application/json' }),
-  async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    try {
-      const requestBody = LaunchEncounterPayloadSchema.parse(request.body);
-      const encounterUrl = await launchNabla({
-        baseUrl: process.env.NABLA_URL!,
-        requestBody,
-      });
-      response.status(200).json({ encounter_url: encounterUrl });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        next(error);
-      } else if (error instanceof ZodError) {
-        next(new HttpError(400, `Invalid request body: ${error.message}`));
-      } else {
-        console.error('Error launching encounter:', error);
-        next(new HttpError(500, 'Error launching encounter'));
-      }
     }
   },
 );

@@ -68,12 +68,6 @@ PORT=4000
 
 ## Endpoints
 
-- `GET /`  
-  Six-step walkthrough comparing onboarding and direct launches from settings and encounters.
-
-- `POST /nabla/encounters`
-  Creates or updates an encounter (`POST /encounters`) and returns its one-time login URL. The walkthrough uses this proxy for its encounter steps.
-
 - `GET /nabla/open/:encounterId`  
   Creates or updates a Nabla encounter (`POST /encounters`) and returns a page with the encounter URL. The provider is logged in automatically when they navigate to it.
 
